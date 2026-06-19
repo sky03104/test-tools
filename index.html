@@ -338,7 +338,7 @@ function compressImage(file) {
     var img = new Image();
     var url = URL.createObjectURL(file);
     img.onload = function() {
-      var maxSide = 1280;
+      var maxSide = 1600;
       var w = img.width, h = img.height;
       if (Math.max(w, h) > maxSide) {
         var scale = maxSide / Math.max(w, h);
@@ -347,10 +347,13 @@ function compressImage(file) {
       }
       var canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
       // 回傳純 base64（去掉 data:image/jpeg;base64, 前綴）
-      var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
       resolve({ base64: dataUrl.split(',')[1], previewUrl: dataUrl });
     };
     img.onerror = function() { reject(new Error('讀取照片失敗')); };
@@ -411,20 +414,27 @@ async function startOCR(file) {
         mimeType: 'image/jpeg'
       })
     });
-    var json = await res.json();
+    var raw = await res.text();          // 先取原始字串，方便除錯
+    var json = {};
+    try { json = JSON.parse(raw); } catch (_) {}
     stopFakeProgress();
     setTimeout(function() {
       document.getElementById('ocrProgress').classList.remove('show');
     }, 300);
 
-    // GAS 回 { success, plate }；plate 為 Gemini 辨識結果
-    var plate = (json && json.plate) ? extractPlate(json.plate) : '';
-    showOCRResult(plate);
+    // GAS 已回乾淨車牌，前端不再二次加工（只做最小清洗：去空白、大寫、留英數與連字號）
+    var rawPlate = (json && typeof json.plate === 'string') ? json.plate : '';
+    var plate = rawPlate.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+    // 除錯資訊：辨識成功顯示 AI 原始回傳，方便比對是否模型認錯
+    var dbg = plate
+      ? ('AI 原始辨識：' + rawPlate)
+      : ('HTTP ' + res.status + ' · GAS回應：' + (raw || '(空)').slice(0, 300));
+    showOCRResult(plate, dbg);
   } catch (e) {
     stopFakeProgress();
     document.getElementById('ocrProgress').classList.remove('show');
-    showOCRResult('');           // 失敗 → 提示手動輸入
-    showToast('⚠️ 辨識服務連線失敗，請手動輸入');
+    showOCRResult('', '連線失敗（fetch 例外）：' + (e && e.message ? e.message : e));
+    showToast('⚠️ 辨識服務連線失敗');
   }
 }
 
@@ -452,16 +462,22 @@ function extractPlate(text) {
 }
 
 // ===== 顯示辨識結果 =====
-function showOCRResult(plate) {
+function showOCRResult(plate, debug) {
   var badge = document.getElementById('ocrResultBadge');
   badge.style.display = 'flex';
   if (plate) {
     badge.className = 'ocr-result-badge';
-    badge.innerHTML = '<i class="ti ti-scan"></i> 辨識成功：<strong style="letter-spacing:2px;">' + plate + '</strong>（可在下方修改）';
+    badge.style.flexDirection = 'column';
+    badge.style.alignItems = 'flex-start';
+    badge.innerHTML = '<span><i class="ti ti-scan"></i> 辨識成功：<strong style="letter-spacing:2px;">' + plate + '</strong>（可在下方修改）</span>' +
+      (debug ? '<div style="margin-top:6px;font-size:11px;line-height:1.5;color:#8A95A8;word-break:break-all;font-family:monospace;">🔧 ' + String(debug).replace(/</g,'&lt;') + '</div>' : '');
     document.getElementById('plateInput').value = plate;
   } else {
     badge.className = 'ocr-result-badge ocr-fail-badge';
-    badge.innerHTML = '<i class="ti ti-alert-circle"></i> 辨識失敗，請手動輸入車牌號碼';
+    badge.style.flexDirection = 'column';
+    badge.style.alignItems = 'flex-start';
+    badge.innerHTML = '<span><i class="ti ti-alert-circle"></i> 辨識失敗，請手動輸入車牌號碼</span>' +
+      (debug ? '<div style="margin-top:8px;font-size:11px;line-height:1.5;color:#FB923C;word-break:break-all;font-family:monospace;">🔧 ' + String(debug).replace(/</g,'&lt;') + '</div>' : '');
   }
 }
 
