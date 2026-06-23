@@ -353,7 +353,8 @@ function compressImage(file) {
       ctx.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
       // 回傳純 base64（去掉 data:image/jpeg;base64, 前綴）
-      var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      // 提高 JPEG 品質到 0.95，讓車牌文字更清晰以利 AI 辨識
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.95);
       resolve({ base64: dataUrl.split(',')[1], previewUrl: dataUrl });
     };
     img.onerror = function() { reject(new Error('讀取照片失敗')); };
@@ -422,12 +423,13 @@ async function startOCR(file) {
       document.getElementById('ocrProgress').classList.remove('show');
     }, 300);
 
-    // GAS 已回乾淨車牌，前端不再二次加工（只做最小清洗：去空白、大寫、留英數與連字號）
+    // 改良：GAS 已做完格式驗證與混淆字元修正，前端只做最小清洗
     var rawPlate = (json && typeof json.plate === 'string') ? json.plate : '';
     var plate = rawPlate.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
-    // 除錯資訊：辨識成功顯示 AI 原始回傳，方便比對是否模型認錯
+    // 取得 AI 原始回應（用於除錯顯示）
+    var aiRaw = (json && json.raw) ? String(json.raw).slice(0, 200) : rawPlate;
     var dbg = plate
-      ? ('AI 原始辨識：' + rawPlate)
+      ? ('AI 辨識結果：' + plate + (aiRaw !== plate ? ' ｜原始回應：' + aiRaw : ''))
       : ('HTTP ' + res.status + ' · GAS回應：' + (raw || '(空)').slice(0, 300));
     showOCRResult(plate, dbg);
   } catch (e) {
