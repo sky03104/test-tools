@@ -215,28 +215,8 @@
       <div class="field-label">🚗 車牌號碼（辨識結果，可手動修改）</div>
       <input type="text" class="field-input plate-input" id="plateInput" placeholder="例：ABC-1234" autocomplete="off" autocorrect="off" spellcheck="false" />
     </div>
-    <div class="field-row">
-      <div class="field-group">
-        <div class="field-label">📅 日期</div>
-        <input type="date" class="field-input" id="dateInput" />
-      </div>
-      <div class="field-group">
-        <div class="field-label">🕐 時間</div>
-        <input type="time" class="field-input" id="timeInput" />
-      </div>
-    </div>
-    <div class="field-group">
-      <div class="field-label">📝 備註（選填）</div>
-      <input type="text" class="field-input" id="noteInput" placeholder="停車位置、車主姓名等…" />
-    </div>
-
     <button class="btn-primary" id="submitBtn" onclick="submitReg()">
       <i class="ti ti-device-floppy"></i> 確認登記
-    </button>
-
-    <div class="or-divider">或</div>
-    <button class="btn-secondary btn-ms-forms" id="msFormsBtn" onclick="openMSForms()">
-      <i class="ti ti-external-link"></i>開啟 Microsoft 表單（並複製車牌）
     </button>
   </div>
 </div>
@@ -249,8 +229,11 @@
     <div class="success-plate" id="successPlate"></div>
     <div class="success-info" id="successInfo"></div>
   </div>
-  <button class="btn-primary" style="margin-top:20px;" onclick="goToSelect()">
-    <i class="ti ti-plus"></i> 繼續登記下一輛
+  <button class="btn-primary" style="margin-top:20px;" onclick="continueSame()">
+    <i class="ti ti-camera"></i> 繼續拍下一台（同項目）
+  </button>
+  <button class="btn-secondary" style="margin-top:10px;" onclick="goToSelect()">
+    <i class="ti ti-list"></i> 換登記項目
   </button>
 </div>
 
@@ -266,9 +249,6 @@
 
 <!-- ===== Toast ===== -->
 <div id="toast" class="toast" style="display:none;"></div>
-
-<!-- ===== Tesseract.js OCR ===== -->
-<script src="https://unpkg.com/tesseract.js@v5.0.4/dist/tesseract.min.js"></script>
 
 <script>
 // ===== 設定 =====
@@ -313,15 +293,15 @@ function openOCR(type) {
   badge.className = 'type-badge ' + type;
   badge.innerHTML = '<i class="ti ti-' + (type==='moto'?'motorbike':type==='car'?'car':'parking') + '"></i> ' + TYPE_LABEL[type];
 
-  // 重置畫面
+  // 重置畫面（日期時間於登記當下自動帶入，無需手動填）
   resetOCRScreen();
-  // 自動填寫日期時間
-  var now = new Date();
-  document.getElementById('dateInput').value = now.toLocaleDateString('sv-SE');
-  document.getElementById('timeInput').value = now.toLocaleTimeString('sv-SE').slice(0,5);
-  document.getElementById('noteInput').value = '';
 
   showScreen('screen-ocr');
+}
+
+// 連續登記：成功後回到「同一項目」的拍照畫面，可接著拍下一台
+function continueSame() {
+  openOCR(currentType);
 }
 
 function goToSelect() {
@@ -351,39 +331,113 @@ document.getElementById('cameraInput').addEventListener('change', function(e) {
   startOCR(file);
 });
 
-// ===== OCR 主流程 =====
-function startOCR(file) {
-  var url = URL.createObjectURL(file);
+// ===== 照片壓縮（縮到長邊 1280、JPEG 0.82）=====
+// 手機原圖可達數 MB，壓縮後再轉 base64 才不會撐爆 GAS 傳輸上限
+function compressImage(file) {
+  return new Promise(function(resolve, reject) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+      var maxSide = 1600;
+      var w = img.width, h = img.height;
+      if (Math.max(w, h) > maxSide) {
+        var scale = maxSide / Math.max(w, h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      // 回傳純 base64（去掉 data:image/jpeg;base64, 前綴）
+      // 提高 JPEG 品質到 0.95，讓車牌文字更清晰以利 AI 辨識
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      resolve({ base64: dataUrl.split(',')[1], previewUrl: dataUrl });
+    };
+    img.onerror = function() { reject(new Error('讀取照片失敗')); };
+    img.src = url;
+  });
+}
 
-  // 顯示預覽
+// ===== 進度條動畫（Gemini 無進度回呼，改用模擬遞增）=====
+var _ocrTimer = null;
+function startFakeProgress() {
+  var bar = document.getElementById('ocrBar');
+  var label = document.getElementById('ocrLabel');
+  var pct = 0;
+  bar.style.width = '0%';
+  label.textContent = 'AI 辨識中…';
+  clearInterval(_ocrTimer);
+  _ocrTimer = setInterval(function() {
+    // 緩慢逼近 90%，等真正回應再補滿
+    pct += pct < 60 ? 8 : (pct < 85 ? 3 : 1);
+    if (pct > 90) pct = 90;
+    bar.style.width = pct + '%';
+    label.textContent = 'AI 辨識中… ' + pct + '%';
+  }, 180);
+}
+function stopFakeProgress() {
+  clearInterval(_ocrTimer);
+  document.getElementById('ocrBar').style.width = '100%';
+}
+
+// ===== OCR 主流程（Gemini Vision，透過 GAS 中介）=====
+async function startOCR(file) {
   var zone = document.getElementById('cameraZone');
+
+  // 1. 壓縮 + 顯示預覽
+  var img;
+  try {
+    img = await compressImage(file);
+  } catch (e) {
+    showToast('⚠️ 照片讀取失敗，請重拍');
+    return;
+  }
   zone.className = 'camera-zone has-photo';
   zone.onclick = null;
-  zone.innerHTML = '<img src="' + url + '" alt="車牌" />';
+  zone.innerHTML = '<img src="' + img.previewUrl + '" alt="車牌" />';
   document.getElementById('retakeBtn').style.display = 'flex';
 
-  // 開始 OCR
+  // 2. 啟動進度動畫
   document.getElementById('ocrProgress').classList.add('show');
-  document.getElementById('ocrBar').style.width = '0%';
-  document.getElementById('ocrLabel').textContent = '正在辨識車牌…';
+  startFakeProgress();
 
-  Tesseract.recognize(url, 'eng', {
-    logger: function(m) {
-      if (m.status === 'recognizing text') {
-        var pct = Math.round(m.progress * 100);
-        document.getElementById('ocrBar').style.width = pct + '%';
-        document.getElementById('ocrLabel').textContent = '辨識中… ' + pct + '%';
-      }
-    }
-  }).then(function(result) {
+  // 3. 呼叫 GAS Gemini OCR
+  try {
+    var res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'recognizePlate',
+        imageBase64: img.base64,
+        mimeType: 'image/jpeg'
+      })
+    });
+    var raw = await res.text();          // 先取原始字串，方便除錯
+    var json = {};
+    try { json = JSON.parse(raw); } catch (_) {}
+    stopFakeProgress();
+    setTimeout(function() {
+      document.getElementById('ocrProgress').classList.remove('show');
+    }, 300);
+
+    // 改良：GAS 已做完格式驗證與混淆字元修正，前端只做最小清洗
+    var rawPlate = (json && typeof json.plate === 'string') ? json.plate : '';
+    var plate = rawPlate.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+    // 取得 AI 原始回應（用於除錯顯示）
+    var aiRaw = (json && json.raw) ? String(json.raw).slice(0, 200) : rawPlate;
+    var dbg = plate
+      ? ('AI 辨識結果：' + plate + (aiRaw !== plate ? ' ｜原始回應：' + aiRaw : ''))
+      : ('HTTP ' + res.status + ' · GAS回應：' + (raw || '(空)').slice(0, 300));
+    showOCRResult(plate, dbg);
+  } catch (e) {
+    stopFakeProgress();
     document.getElementById('ocrProgress').classList.remove('show');
-    var raw = result.data.text;
-    var plate = extractPlate(raw);
-    showOCRResult(plate);
-  }).catch(function(err) {
-    document.getElementById('ocrProgress').classList.remove('show');
-    showOCRResult('');
-  });
+    showOCRResult('', '連線失敗（fetch 例外）：' + (e && e.message ? e.message : e));
+    showToast('⚠️ 辨識服務連線失敗');
+  }
 }
 
 // ===== 車牌提取（台灣格式）=====
@@ -410,40 +464,43 @@ function extractPlate(text) {
 }
 
 // ===== 顯示辨識結果 =====
-function showOCRResult(plate) {
+function showOCRResult(plate, debug) {
   var badge = document.getElementById('ocrResultBadge');
   badge.style.display = 'flex';
   if (plate) {
     badge.className = 'ocr-result-badge';
-    badge.innerHTML = '<i class="ti ti-scan"></i> 辨識成功：<strong style="letter-spacing:2px;">' + plate + '</strong>（可在下方修改）';
+    badge.style.flexDirection = 'column';
+    badge.style.alignItems = 'flex-start';
+    badge.innerHTML = '<span><i class="ti ti-scan"></i> 辨識成功：<strong style="letter-spacing:2px;">' + plate + '</strong>（可在下方修改）</span>' +
+      (debug ? '<div style="margin-top:6px;font-size:11px;line-height:1.5;color:#8A95A8;word-break:break-all;font-family:monospace;">🔧 ' + String(debug).replace(/</g,'&lt;') + '</div>' : '');
     document.getElementById('plateInput').value = plate;
   } else {
     badge.className = 'ocr-result-badge ocr-fail-badge';
-    badge.innerHTML = '<i class="ti ti-alert-circle"></i> 辨識失敗，請手動輸入車牌號碼';
+    badge.style.flexDirection = 'column';
+    badge.style.alignItems = 'flex-start';
+    badge.innerHTML = '<span><i class="ti ti-alert-circle"></i> 辨識失敗，請手動輸入車牌號碼</span>' +
+      (debug ? '<div style="margin-top:8px;font-size:11px;line-height:1.5;color:#FB923C;word-break:break-all;font-family:monospace;">🔧 ' + String(debug).replace(/</g,'&lt;') + '</div>' : '');
   }
 }
 
 // ===== 提交登記 =====
 async function submitReg() {
   var plate = document.getElementById('plateInput').value.trim().toUpperCase();
-  var date  = document.getElementById('dateInput').value;
-  var time  = document.getElementById('timeInput').value;
-  var note  = document.getElementById('noteInput').value.trim();
-
   if (!plate) { showToast('⚠️ 請輸入車牌號碼'); return; }
-  if (!date || !time) { showToast('⚠️ 日期時間不能為空'); return; }
 
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitBtn').innerHTML = '<i class="ti ti-loader" style="animation:spinRing .8s linear infinite"></i> 登記中…';
+
+  // 登記時間 = 送出當下（GAS 端亦以台北時間自動寫入，此處用於畫面顯示）
+  var now  = new Date();
+  var dStr = now.toLocaleDateString('sv-SE');           // yyyy-MM-dd
+  var tStr = now.toLocaleTimeString('sv-SE').slice(0,5); // HH:mm
 
   var payload = {
     action: 'vehicleReg',
     type: currentType,
     typeLabel: TYPE_LABEL[currentType].replace(/ [^\s]+$/, '').trim(),
     plate: plate,
-    date: date,
-    time: time,
-    note: note,
     operator: empId || '未登入'
   };
 
@@ -460,9 +517,8 @@ async function submitReg() {
   // 顯示成功畫面
   document.getElementById('successPlate').textContent = plate;
   document.getElementById('successInfo').innerHTML =
-    TYPE_LABEL[currentType] + '<br>' + date + ' ' + time +
-    (note ? '<br>備註：' + note : '') +
-    (gasOk ? '<br><span style="color:#4ADE80">✓ 已寫入 Google Sheets</span>' : '<br><span style="color:#FB923C">⚠️ GAS 未設定，請透過 Microsoft 表單補登</span>');
+    TYPE_LABEL[currentType] + '<br>' + dStr + ' ' + tStr +
+    (gasOk ? '<br><span style="color:#4ADE80">✓ 已寫入 Google Sheets</span>' : '<br><span style="color:#FB923C">⚠️ 寫入失敗，請改用 Microsoft 表單補登</span>');
   showScreen('screen-success');
 }
 
