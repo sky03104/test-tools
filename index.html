@@ -1,74 +1,58 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>過夜車輛登記 · 天鷹保全</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>過夜車輛登記</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0A0C10; font-family: 'Microsoft JhengHei',sans-serif; color: #F5F5F5; min-height: 100vh; }
-    #splash { position:fixed; inset:0; background:#0A0C10; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity .6s; }
-    #splash.hide { opacity:0; pointer-events:none; }
-    .app-header { display:flex; align-items:center; gap:12px; padding:12px 16px; background:rgba(10,12,16,.95); border-bottom:1px solid rgba(212,168,0,.2); position:sticky; top:0; z-index:100; }
-    .header-logo { width:34px; height:34px; object-fit:contain; }
+    body { background: #0A0C10; font-family: sans-serif; color: #F5F5F5; min-height: 100vh; }
     .screen { display:none; padding:16px; }
     .screen.active { display:block; }
     .reg-card { display:flex; align-items:center; gap:14px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:16px; margin-bottom:12px; cursor:pointer; }
     .camera-zone { background:rgba(255,255,255,.04); border:2px dashed rgba(255,255,255,.12); border-radius:14px; padding:40px 20px; text-align:center; cursor:pointer; }
-    .camera-zone img { width:100%; max-height:250px; object-fit:contain; border-radius:8px; }
+    .camera-zone img { width:100%; max-height:250px; object-fit:contain; }
     .field-input { width:100%; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:15px; color:#FFD700; font-size:24px; text-align:center; margin:15px 0; }
-    .btn-primary { width:100%; background:linear-gradient(135deg,#C9A227,#D4A800); color:#000; border:none; border-radius:12px; padding:15px; font-weight:900; cursor:pointer; }
-    .ocr-progress { display:none; margin:15px 0; color:#FFD700; text-align:center; }
+    .btn-primary { width:100%; background:linear-gradient(135deg,#C9A227,#D4A800); color:#000; border:none; border-radius:12px; padding:15px; font-weight:900; }
+    .ocr-progress { display:none; color:#FFD700; text-align:center; margin-bottom:10px; }
     .ocr-progress.show { display:block; }
-    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); padding:10px 20px; border-radius:20px; z-index:10000; display:none; }
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); padding:10px 20px; border-radius:20px; display:none; z-index:999; }
   </style>
 </head>
 <body>
 
-<div id="splash"><h2>天鷹保全辨識系統</h2></div>
-
-<header class="app-header">
-  <div class="header-cn">過夜車輛登記系統</div>
-</header>
-
-<!-- 畫面 0: 選擇車型 -->
 <div id="screen-select" class="screen active">
+  <h2 style="margin-bottom:20px;">選擇登記項目</h2>
   <div class="reg-card" onclick="openOCR('moto')">🏍️ 館內機車過夜登記</div>
   <div class="reg-card" onclick="openOCR('car')">🚗 館內汽車過夜登記</div>
   <div class="reg-card" onclick="openOCR('park')">🅿️ 新莊停車場登記</div>
 </div>
 
-<!-- 畫面 1: 拍照辨識 -->
 <div id="screen-ocr" class="screen">
     <button onclick="goToSelect()" style="color:#aaa; background:none; border:none; margin-bottom:10px;">← 返回</button>
     <div id="cameraZone" class="camera-zone" onclick="triggerCamera()">
-        <i class="ti ti-camera" style="font-size:40px;"></i><br>點擊拍攝車牌
+        <i class="ti ti-camera" style="font-size:40px;"></i><br>點擊拍照
     </div>
-    <div id="ocrProgress" class="ocr-progress">辨識中，請稍候...</div>
-    <input type="text" class="field-input" id="plateInput" placeholder="辨識結果將顯示於此" />
+    <div id="ocrProgress" class="ocr-progress">AI 辨識中，請稍候...</div>
+    <input type="text" class="field-input" id="plateInput" placeholder="車牌號碼" />
     <button class="btn-primary" id="submitBtn" onclick="submitReg()">確認登記</button>
 </div>
 
-<!-- 畫面 2: 成功 -->
 <div id="screen-success" class="screen" style="text-align:center;">
     <h2 style="color:#4ADE80;">✅ 登記完成</h2>
     <div id="successPlate" style="font-size:30px; margin:20px 0;"></div>
-    <button class="btn-primary" onclick="continueSame()">繼續拍下一台</button><br><br>
-    <button onclick="goToSelect()" style="color:#aaa; background:none; border:none;">返回主選單</button>
+    <button class="btn-primary" onclick="goToSelect()">返回主選單</button>
 </div>
 
-<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" />
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
 <div id="toast" class="toast"></div>
 
 <script>
-// ===== 核心設定：請修改此處 =====
-const GAS_URL = 'https://script.google.com/macros/s/AKfycby8wWysK9AeiXzVlfB2MSyyxgrBLp7T6W0i-cKl-7RFHi2TL2P0gTw2btCpwJo_m6Mq/exec'; 
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby8wWysK9AeiXzVlfB2MSyyxgrBLp7T6W0i-cKl-7RFHi2TL2P0gTw2btCpwJo_m6Mq/exec'; // <--- 這裡一定要換成最新的
 
 let currentType = '';
 const TYPE_LABEL = { moto:'館內機車', car:'館內汽車', park:'新莊停車場' };
-
-window.onload = () => setTimeout(() => document.getElementById('splash').classList.add('hide'), 1000);
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -78,45 +62,43 @@ function showScreen(id) {
 function openOCR(type) {
   currentType = type;
   document.getElementById('plateInput').value = '';
-  document.getElementById('cameraZone').innerHTML = '<i class="ti ti-camera" style="font-size:40px;"></i><br>點擊拍攝車牌';
+  document.getElementById('cameraZone').innerHTML = '點擊拍照';
   showScreen('screen-ocr');
 }
 
 function goToSelect() { showScreen('screen-select'); }
-function continueSame() { openOCR(currentType); }
-
 function triggerCamera() { document.getElementById('cameraInput').click(); }
 
 document.getElementById('cameraInput').onchange = async function(e) {
   const file = e.target.files[0];
   if (!file) return;
 
-  // 1. 預覽與壓縮
   const reader = new FileReader();
   reader.onload = async (event) => {
-    document.getElementById('cameraZone').innerHTML = `<img src="${event.target.result}" />`;
+    document.getElementById('cameraZone').innerHTML = `<img src="${event.target.result}">`;
     document.getElementById('ocrProgress').classList.add('show');
     
-    // 壓縮照片 (GAS 對 base64 大小有限制)
-    const compressedBase64 = await compressImage(file);
+    // 壓縮照片
+    const base64 = await compressImage(file);
     
-    // 2. 送往 GAS 辨識
     try {
       const res = await fetch(GAS_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'recognizePlate', imageBase64: compressedBase64 })
+        body: JSON.stringify({ action: 'recognizePlate', imageBase64: base64 })
       });
       const data = await res.json();
       document.getElementById('ocrProgress').classList.remove('show');
       
-      if (data.success && data.plate) {
+      if (data.success) {
         document.getElementById('plateInput').value = data.plate;
+        showToast('辨識成功！');
       } else {
-        showToast('辨識失敗，請手動輸入');
+        // 如果失敗，直接顯示詳細原因
+        alert("辨識出錯了！\n原因：" + data.error);
       }
     } catch (err) {
       document.getElementById('ocrProgress').classList.remove('show');
-      showToast('連線失敗');
+      alert("連線失敗，請檢查網路或 GAS 網址是否正確。");
     }
   };
   reader.readAsDataURL(file);
@@ -141,34 +123,17 @@ function compressImage(file) {
 }
 
 async function submitReg() {
-  const plate = document.getElementById('plateInput').value.trim();
-  if (!plate) return showToast('請輸入車牌');
-
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.innerText = '儲存中...';
-
-  try {
-    const res = await fetch(GAS_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'vehicleReg',
-        type: currentType,
-        typeLabel: TYPE_LABEL[currentType],
-        plate: plate,
-        operator: '行動裝置端'
-      })
-    });
-    const data = await res.json();
-    if (data.success) {
-      document.getElementById('successPlate').innerText = plate;
-      showScreen('screen-success');
-    } else {
-      showToast('儲存失敗');
-    }
-  } catch (e) { showToast('連線錯誤'); }
-  btn.disabled = false;
-  btn.innerText = '確認登記';
+  const plate = document.getElementById('plateInput').value;
+  if (!plate) return alert('請輸入車牌');
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'vehicleReg', type: currentType, typeLabel: TYPE_LABEL[currentType], plate: plate, operator: '手機端' })
+  });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('successPlate').innerText = plate;
+    showScreen('screen-success');
+  }
 }
 
 function showToast(msg) {
