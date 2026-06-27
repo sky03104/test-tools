@@ -1,146 +1,2519 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>過夜車輛登記</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0A0C10; font-family: sans-serif; color: #F5F5F5; min-height: 100vh; }
-    .screen { display:none; padding:16px; }
-    .screen.active { display:block; }
-    .reg-card { display:flex; align-items:center; gap:14px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:16px; margin-bottom:12px; cursor:pointer; }
-    .camera-zone { background:rgba(255,255,255,.04); border:2px dashed rgba(255,255,255,.12); border-radius:14px; padding:40px 20px; text-align:center; cursor:pointer; }
-    .camera-zone img { width:100%; max-height:250px; object-fit:contain; }
-    .field-input { width:100%; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:15px; color:#FFD700; font-size:24px; text-align:center; margin:15px 0; }
-    .btn-primary { width:100%; background:linear-gradient(135deg,#C9A227,#D4A800); color:#000; border:none; border-radius:12px; padding:15px; font-weight:900; }
-    .ocr-progress { display:none; color:#FFD700; text-align:center; margin-bottom:10px; }
-    .ocr-progress.show { display:block; }
-    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); padding:10px 20px; border-radius:20px; display:none; z-index:999; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+
+<title>天鷹保全 V2.5 Enterprise</title>
+
+<meta name="theme-color" content="#0A0C10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<style>
+/* ============================================================
+   天鷹保全 V2.5 Enterprise
+   黑金 Glass UI
+============================================================ */
+
+:root{
+
+--bg:#0A0C10;
+--bg2:#0D0F14;
+
+--gold:#D4A800;
+--gold2:#FFD700;
+
+--indigo:#6366F1;
+--indigo2:#818CF8;
+
+--green:#22C55E;
+--orange:#FB923C;
+--red:#F87171;
+
+--text:#F5F5F5;
+--sub:#9CA3AF;
+
+--glass:rgba(255,255,255,.06);
+
+--border:rgba(255,255,255,.08);
+
+--shadow:
+0 12px 30px rgba(0,0,0,.45);
+
+--radius:18px;
+
+}
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+-webkit-tap-highlight-color:transparent;
+}
+
+html{
+
+height:100%;
+background:var(--bg);
+
+}
+
+body{
+
+font-family:
+Microsoft JhengHei,
+Arial,
+sans-serif;
+
+background:
+linear-gradient(
+180deg,
+#0A0C10,
+#0D0F14);
+
+color:var(--text);
+
+min-height:100vh;
+
+overflow-x:hidden;
+
+}
+
+/* ============================================================
+背景光暈
+============================================================ */
+
+body::before{
+
+content:"";
+
+position:fixed;
+
+top:-200px;
+left:-200px;
+
+width:420px;
+height:420px;
+
+background:
+
+radial-gradient(
+circle,
+rgba(212,168,0,.18),
+transparent 70%
+);
+
+filter:blur(25px);
+
+pointer-events:none;
+
+}
+
+body::after{
+
+content:"";
+
+position:fixed;
+
+right:-150px;
+bottom:-150px;
+
+width:380px;
+height:380px;
+
+background:
+
+radial-gradient(
+circle,
+rgba(99,102,241,.15),
+transparent 70%
+);
+
+filter:blur(35px);
+
+pointer-events:none;
+
+}
+
+/* ============================================================
+Header
+============================================================ */
+
+.header{
+
+position:sticky;
+
+top:0;
+
+z-index:100;
+
+backdrop-filter:blur(16px);
+
+background:
+
+rgba(10,12,16,.75);
+
+border-bottom:
+
+1px solid rgba(255,255,255,.06);
+
+padding:
+
+env(safe-area-inset-top)
+18px
+16px
+18px;
+
+}
+
+.header-row{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+}
+
+.brand{
+
+display:flex;
+
+align-items:center;
+
+gap:14px;
+
+}
+
+.logo{
+
+width:58px;
+height:58px;
+
+border-radius:50%;
+
+display:flex;
+
+align-items:center;
+justify-content:center;
+
+background:
+
+linear-gradient(
+135deg,
+#FFD700,
+#D4A800);
+
+box-shadow:
+
+0 0 18px rgba(212,168,0,.55);
+
+font-size:28px;
+
+color:#000;
+
+font-weight:bold;
+
+}
+
+.brand-title{
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+.brand-title h1{
+
+font-size:22px;
+
+font-weight:700;
+
+letter-spacing:1px;
+
+}
+
+.brand-title h1 span{
+
+color:var(--gold2);
+
+}
+
+.brand-title p{
+
+margin-top:4px;
+
+font-size:12px;
+
+letter-spacing:2px;
+
+color:var(--sub);
+
+}
+
+/* ============================================================
+狀態
+============================================================ */
+
+.status{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+padding:10px 16px;
+
+border-radius:999px;
+
+background:
+
+rgba(34,197,94,.12);
+
+border:
+
+1px solid rgba(34,197,94,.35);
+
+}
+
+.status-dot{
+
+width:10px;
+height:10px;
+
+border-radius:50%;
+
+background:#22C55E;
+
+box-shadow:
+
+0 0 12px #22C55E;
+
+animation:
+
+pulse 1.8s infinite;
+
+}
+
+.status span{
+
+font-size:13px;
+
+font-weight:600;
+
+color:#D1FAE5;
+
+}
+
+@keyframes pulse{
+
+0%{
+
+transform:scale(1);
+
+opacity:1;
+
+}
+
+50%{
+
+transform:scale(1.35);
+
+opacity:.45;
+
+}
+
+100%{
+
+transform:scale(1);
+
+opacity:1;
+
+}
+
+}
+
+/* ============================================================
+Main
+============================================================ */
+
+.main{
+
+width:min(700px,100%);
+
+margin:auto;
+
+padding:24px 16px 40px;
+
+}
+
+/* ============================================================
+Glass Card
+============================================================ */
+
+.card{
+
+background:
+
+var(--glass);
+
+border:
+
+1px solid var(--border);
+
+border-radius:
+
+var(--radius);
+
+padding:22px;
+
+box-shadow:
+
+var(--shadow);
+
+backdrop-filter:
+
+blur(20px);
+
+margin-bottom:20px;
+
+}
+
+.card-title{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+margin-bottom:20px;
+
+}
+
+.card-title h2{
+
+font-size:20px;
+
+font-weight:700;
+
+}
+
+.card-title small{
+
+color:var(--sub);
+
+}
+
+/* ============================================================
+車牌預覽
+============================================================ */
+
+.plate-preview{
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+padding:24px;
+
+margin-top:12px;
+
+border-radius:16px;
+
+background:
+
+rgba(255,255,255,.04);
+
+border:
+
+2px dashed rgba(255,215,0,.25);
+
+min-height:120px;
+
+}
+
+.plate-value{
+
+font-size:42px;
+
+font-weight:800;
+
+letter-spacing:5px;
+
+color:var(--gold2);
+
+text-shadow:
+
+0 0 14px rgba(255,215,0,.35);
+
+}
+
+/* ============================================================
+Loading Overlay
+============================================================ */
+
+.loading{
+
+position:fixed;
+
+inset:0;
+
+display:none;
+
+align-items:center;
+
+justify-content:center;
+
+flex-direction:column;
+
+gap:22px;
+
+background:
+
+rgba(5,5,5,.82);
+
+backdrop-filter:
+
+blur(10px);
+
+z-index:9999;
+
+}
+
+.loading.show{
+
+display:flex;
+
+}
+
+.spinner{
+
+width:82px;
+height:82px;
+
+border-radius:50%;
+
+border:
+
+6px solid rgba(255,255,255,.15);
+
+border-top:
+
+6px solid var(--gold2);
+
+animation:
+
+spin .8s linear infinite;
+
+}
+
+.loading h3{
+
+font-size:22px;
+
+}
+
+.loading p{
+
+color:var(--sub);
+
+}
+
+@keyframes spin{
+
+100%{
+
+transform:rotate(360deg);
+
+}
+
+}
+</style>
 </head>
+
 <body>
 
-<div id="screen-select" class="screen active">
-  <h2 style="margin-bottom:20px;">選擇登記項目</h2>
-  <div class="reg-card" onclick="openOCR('moto')">🏍️ 館內機車過夜登記</div>
-  <div class="reg-card" onclick="openOCR('car')">🚗 館內汽車過夜登記</div>
-  <div class="reg-card" onclick="openOCR('park')">🅿️ 新莊停車場登記</div>
+<div class="loading" id="loading">
+
+<div class="spinner"></div>
+
+<h3>AI 辨識中</h3>
+
+<p>請稍候，正在分析車牌...</p>
+
 </div>
 
-<div id="screen-ocr" class="screen">
-    <button onclick="goToSelect()" style="color:#aaa; background:none; border:none; margin-bottom:10px;">← 返回</button>
-    <div id="cameraZone" class="camera-zone" onclick="triggerCamera()">
-        <i class="ti ti-camera" style="font-size:40px;"></i><br>點擊拍照
+<header class="header">
+
+<div class="header-row">
+
+<div class="brand">
+
+<div class="logo">
+🦅
+</div>
+
+<div class="brand-title">
+
+<h1>
+
+<span>天鷹</span>保全
+
+</h1>
+
+<p>
+
+TIANYING SECURITY · V2.5
+
+</p>
+
+</div>
+
+</div>
+
+<div class="status">
+
+<div class="status-dot"></div>
+
+<span>系統運作中</span>
+
+</div>
+
+</div>
+
+</header>
+
+<main class="main">
+
+<section class="card">
+
+<div class="card-title">
+
+<h2>AI 車牌辨識</h2>
+
+<small>Gemini OCR</small>
+
+</div>
+
+<div class="plate-preview">
+
+<div
+class="plate-value"
+id="plateResult">
+
+------
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ============================================================
+操作區
+============================================================ -->
+
+<section class="card">
+
+    <div class="card-title">
+        <h2>車輛登錄</h2>
+        <small>Vehicle Register</small>
     </div>
-    <div id="ocrProgress" class="ocr-progress">AI 辨識中，請稍候...</div>
-    <input type="text" class="field-input" id="plateInput" placeholder="車牌號碼" />
-    <button class="btn-primary" id="submitBtn" onclick="submitReg()">確認登記</button>
+
+    <div class="form-group">
+
+        <label>車輛類型</label>
+
+        <select id="vehicleType" class="input">
+
+            <option value="臨停">臨停</option>
+            <option value="訪客">訪客</option>
+            <option value="施工">施工</option>
+            <option value="住戶">住戶</option>
+
+        </select>
+
+    </div>
+
+    <div class="form-group">
+
+        <label>車牌號碼</label>
+
+        <input
+            id="plateInput"
+            class="input"
+            autocomplete="off"
+            maxlength="10"
+            placeholder="例如 ABC-1234">
+
+    </div>
+
+    <div class="form-group">
+
+        <label>登錄人員</label>
+
+        <input
+            id="operator"
+            class="input"
+            placeholder="請輸入姓名">
+
+    </div>
+
+    <div class="button-grid">
+
+        <button
+            id="btnCamera"
+            class="btn btn-gold">
+
+            📷
+            開啟相機
+
+        </button>
+
+        <button
+            id="btnRetake"
+            class="btn btn-indigo">
+
+            🔄
+            重新拍照
+
+        </button>
+
+        <button
+            id="btnAI"
+            class="btn btn-indigo">
+
+            🤖
+            AI辨識
+
+        </button>
+
+        <button
+            id="btnSave"
+            class="btn btn-success">
+
+            ✅
+            確認送出
+
+        </button>
+
+    </div>
+
+</section>
+
+<!-- ============================================================
+最近10筆
+============================================================ -->
+
+<section class="card">
+
+    <div class="card-title">
+
+        <h2>最近10筆</h2>
+
+        <small>Latest Records</small>
+
+    </div>
+
+    <div id="recentList" class="recent-list">
+
+        <div class="empty">
+
+            尚無資料
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ============================================================
+成功動畫
+============================================================ -->
+
+<div
+id="successLayer"
+class="success-layer">
+
+<div class="success-box">
+
+<div class="success-icon">
+
+✔
+
 </div>
 
-<div id="screen-success" class="screen" style="text-align:center;">
-    <h2 style="color:#4ADE80;">✅ 登記完成</h2>
-    <div id="successPlate" style="font-size:30px; margin:20px 0;"></div>
-    <button class="btn-primary" onclick="goToSelect()">返回主選單</button>
+<h2>
+
+登錄成功
+
+</h2>
+
+<p>
+
+0.5 秒後自動開啟相機
+
+</p>
+
 </div>
 
-<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
-<div id="toast" class="toast"></div>
+</div>
+
+<!-- ============================================================
+隱藏元件
+============================================================ -->
+
+<input
+type="file"
+accept="image/*"
+capture="environment"
+id="cameraInput"
+hidden>
+
+<canvas
+id="canvas"
+hidden>
+</canvas>
+
+<style>
+
+/* ============================================================
+Form
+============================================================ */
+
+.form-group{
+
+margin-bottom:18px;
+
+}
+
+.form-group label{
+
+display:block;
+
+margin-bottom:8px;
+
+font-size:14px;
+
+color:#D1D5DB;
+
+}
+
+.input{
+
+width:100%;
+
+height:52px;
+
+padding:0 16px;
+
+border-radius:14px;
+
+background:#14181F;
+
+border:1px solid #2B313D;
+
+color:white;
+
+font-size:17px;
+
+outline:none;
+
+transition:.25s;
+
+}
+
+.input:focus{
+
+border-color:#FFD700;
+
+box-shadow:
+
+0 0 0 3px rgba(255,215,0,.15);
+
+}
+
+.button-grid{
+
+display:grid;
+
+grid-template-columns:
+
+repeat(2,1fr);
+
+gap:14px;
+
+margin-top:22px;
+
+}
+
+.btn{
+
+height:54px;
+
+border:none;
+
+border-radius:15px;
+
+font-size:16px;
+
+font-weight:700;
+
+cursor:pointer;
+
+transition:.25s;
+
+color:white;
+
+}
+
+.btn:active{
+
+transform:scale(.96);
+
+}
+
+.btn:disabled{
+
+opacity:.5;
+
+pointer-events:none;
+
+}
+
+.btn-gold{
+
+background:
+
+linear-gradient(
+135deg,
+#FFD700,
+#D4A800);
+
+color:black;
+
+}
+
+.btn-indigo{
+
+background:
+
+linear-gradient(
+135deg,
+#818CF8,
+#6366F1);
+
+}
+
+.btn-success{
+
+background:
+
+linear-gradient(
+135deg,
+#22C55E,
+#16A34A);
+
+}
+
+.recent-list{
+
+display:flex;
+
+flex-direction:column;
+
+gap:12px;
+
+}
+
+.recent-item{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:14px;
+
+border-radius:14px;
+
+background:
+
+rgba(255,255,255,.04);
+
+border:
+
+1px solid rgba(255,255,255,.06);
+
+}
+
+.empty{
+
+text-align:center;
+
+padding:30px;
+
+color:#6B7280;
+
+}
+
+.success-layer{
+
+position:fixed;
+
+inset:0;
+
+display:none;
+
+align-items:center;
+
+justify-content:center;
+
+background:
+
+rgba(0,0,0,.75);
+
+backdrop-filter:blur(8px);
+
+z-index:99999;
+
+}
+
+.success-layer.show{
+
+display:flex;
+
+animation:fadeIn .25s;
+
+}
+
+.success-box{
+
+background:#11151C;
+
+padding:36px;
+
+border-radius:24px;
+
+text-align:center;
+
+border:
+
+1px solid rgba(255,215,0,.25);
+
+}
+
+.success-icon{
+
+width:90px;
+
+height:90px;
+
+margin:auto;
+
+border-radius:50%;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+font-size:42px;
+
+background:#22C55E;
+
+margin-bottom:20px;
+
+}
+
+@keyframes fadeIn{
+
+from{
+
+opacity:0;
+
+}
+
+to{
+
+opacity:1;
+
+}
+
+}
+
+@media(max-width:640px){
+
+.button-grid{
+
+grid-template-columns:1fr;
+
+}
+
+.plate-value{
+
+font-size:34px;
+
+}
+
+}
+
+</style>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycby8wWysK9AeiXzVlfB2MSyyxgrBLp7T6W0i-cKl-7RFHi2TL2P0gTw2btCpwJo_m6Mq/exec'; // <--- 這裡一定要換成最新的
+"use strict";
 
-let currentType = '';
-const TYPE_LABEL = { moto:'館內機車', car:'館內汽車', park:'新莊停車場' };
+/* ============================================================
+   天鷹保全 V2.5 Enterprise
+   JavaScript Core
+============================================================ */
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
+const CONFIG = {
 
-function openOCR(type) {
-  currentType = type;
-  document.getElementById('plateInput').value = '';
-  document.getElementById('cameraZone').innerHTML = '點擊拍照';
-  showScreen('screen-ocr');
-}
+    API_URL:
+    "https://script.google.com/macros/s/AKfycby8wWysK9AeiXzVlfB2MSyyxgrBLp7T6W0i-cKl-7RFHi2TL2P0gTw2btCpwJo_m6Mq/exec",
 
-function goToSelect() { showScreen('screen-select'); }
-function triggerCamera() { document.getElementById('cameraInput').click(); }
+    JPEG_QUALITY:0.82,
 
-document.getElementById('cameraInput').onchange = async function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+    MAX_WIDTH:1000,
 
-  const reader = new FileReader();
-  reader.onload = async (event) => {
-    document.getElementById('cameraZone').innerHTML = `<img src="${event.target.result}">`;
-    document.getElementById('ocrProgress').classList.add('show');
-    
-    // 壓縮照片
-    const base64 = await compressImage(file);
-    
-    try {
-      const res = await fetch(GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'recognizePlate', imageBase64: base64 })
-      });
-      const data = await res.json();
-      document.getElementById('ocrProgress').classList.remove('show');
-      
-      if (data.success) {
-        document.getElementById('plateInput').value = data.plate;
-        showToast('辨識成功！');
-      } else {
-        // 如果失敗，直接顯示詳細原因
-        alert("辨識出錯了！\n原因：" + data.error);
-      }
-    } catch (err) {
-      document.getElementById('ocrProgress').classList.remove('show');
-      alert("連線失敗，請檢查網路或 GAS 網址是否正確。");
-    }
-  };
-  reader.readAsDataURL(file);
+    AUTO_NEXT_DELAY:500,
+
+    NIGHT_MODE:true
+
 };
 
-function compressImage(file) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const max = 1000;
-      let w = img.width, h = img.height;
-      if (w > h && w > max) { h *= max/w; w = max; }
-      else if (h > max) { w *= max/h; h = max; }
-      canvas.width = w; canvas.height = h;
-      ctx.drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
-    };
-  });
+const state={
+
+    busy:false,
+
+    imageBase64:"",
+
+    recent:[]
+
+};
+
+/* ============================================================
+DOM
+============================================================ */
+
+const cameraInput=document.getElementById("cameraInput");
+const canvas=document.getElementById("canvas");
+
+const plateResult=document.getElementById("plateResult");
+const plateInput=document.getElementById("plateInput");
+
+const vehicleType=document.getElementById("vehicleType");
+const operator=document.getElementById("operator");
+
+const btnCamera=document.getElementById("btnCamera");
+const btnRetake=document.getElementById("btnRetake");
+const btnAI=document.getElementById("btnAI");
+const btnSave=document.getElementById("btnSave");
+
+const loading=document.getElementById("loading");
+const successLayer=document.getElementById("successLayer");
+
+const recentList=document.getElementById("recentList");
+
+/* ============================================================
+初始化
+============================================================ */
+
+window.addEventListener("load",()=>{
+
+    restoreRecent();
+
+    bindEvents();
+
+});
+
+/* ============================================================
+事件
+============================================================ */
+
+function bindEvents(){
+
+    btnCamera.onclick=openCamera;
+
+    btnRetake.onclick=openCamera;
+
+    btnAI.onclick=recognizePlate;
+
+    btnSave.onclick=saveVehicle;
+
+    cameraInput.onchange=onImageSelected;
+
 }
 
-async function submitReg() {
-  const plate = document.getElementById('plateInput').value;
-  if (!plate) return alert('請輸入車牌');
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'vehicleReg', type: currentType, typeLabel: TYPE_LABEL[currentType], plate: plate, operator: '手機端' })
-  });
-  const data = await res.json();
-  if (data.success) {
-    document.getElementById('successPlate').innerText = plate;
-    showScreen('screen-success');
-  }
+/* ============================================================
+開啟相機
+============================================================ */
+
+function openCamera(){
+
+    if(state.busy) return;
+
+    cameraInput.value="";
+
+    cameraInput.click();
+
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.innerText = msg; t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 3000);
+/* ============================================================
+選擇照片
+============================================================ */
+
+async function onImageSelected(e){
+
+    const file=e.target.files[0];
+
+    if(!file) return;
+
+    state.imageBase64=await compressImage(file);
+
 }
+
+/* ============================================================
+Canvas最佳化
+============================================================ */
+
+async function compressImage(file){
+
+    return new Promise(resolve=>{
+
+        const img=new Image();
+
+        img.onload=()=>{
+
+            const ctx=canvas.getContext("2d");
+
+            let w=img.width;
+            let h=img.height;
+
+            if(w>CONFIG.MAX_WIDTH){
+
+                h*=CONFIG.MAX_WIDTH/w;
+                w=CONFIG.MAX_WIDTH;
+
+            }
+
+            canvas.width=w;
+            canvas.height=h;
+
+            if(CONFIG.NIGHT_MODE){
+
+                ctx.filter="contrast(120%) brightness(110%)";
+
+            }else{
+
+                ctx.filter="none";
+
+            }
+
+            ctx.drawImage(img,0,0,w,h);
+
+            resolve(
+
+                canvas.toDataURL(
+                    "image/jpeg",
+                    CONFIG.JPEG_QUALITY
+                )
+
+            );
+
+        };
+
+        img.src=URL.createObjectURL(file);
+
+    });
+
+}
+
+/* ============================================================
+AI辨識
+============================================================ */
+
+async function recognizePlate(){
+
+    if(state.busy) return;
+
+    if(!state.imageBase64){
+
+        alert("請先拍照");
+
+        return;
+
+    }
+
+    state.busy=true;
+
+    lockButtons(true);
+
+    showLoading(true);
+
+    try{
+
+        const res=await fetch(CONFIG.API_URL,{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+
+                action:"recognizePlate",
+
+                imageBase64:state.imageBase64
+
+            })
+
+        });
+
+        const json=await res.json();
+
+        if(!json.success){
+
+            throw json.error;
+
+        }
+
+        const plate=normalizePlate(json.plate);
+
+        plateInput.value=plate;
+
+        plateResult.textContent=plate;
+
+    }catch(err){
+
+        alert(err);
+
+    }
+
+    showLoading(false);
+
+    lockButtons(false);
+
+    state.busy=false;
+
+}
+
+/* ============================================================
+車牌修正
+============================================================ */
+
+function normalizePlate(text){
+
+    if(!text) return "";
+
+    text=text.toUpperCase();
+
+    text=text.replace(/\s/g,"");
+
+    text=text.replace(/O/g,"0");
+
+    text=text.replace(/I/g,"1");
+
+    text=text.replace(/S/g,"5");
+
+    text=text.replace(/B/g,"8");
+
+    text=text.replace(/Z/g,"2");
+
+    return text;
+
+}
+
+/* ============================================================
+送出
+============================================================ */
+
+async function saveVehicle(){
+
+    if(state.busy) return;
+
+    if(!plateInput.value){
+
+        alert("請先辨識車牌");
+
+        return;
+
+    }
+
+    state.busy=true;
+
+    lockButtons(true);
+
+    try{
+
+        const res=await fetch(CONFIG.API_URL,{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+
+                action:"vehicleReg",
+
+                plate:plateInput.value,
+
+                operator:operator.value,
+
+                typeLabel:vehicleType.value
+
+            })
+
+        });
+
+        const json=await res.json();
+
+        if(!json.success){
+
+            throw json.error;
+
+        }
+
+        addRecent(
+
+            plateInput.value,
+
+            vehicleType.value
+
+        );
+
+        playSuccess();
+
+    }catch(err){
+
+        alert(err);
+
+        state.busy=false;
+
+        lockButtons(false);
+
+    }
+
+}
+
+/* ============================================================
+成功動畫
+============================================================ */
+
+function playSuccess(){
+
+    successLayer.classList.add("show");
+
+    setTimeout(()=>{
+
+        successLayer.classList.remove("show");
+
+        state.busy=false;
+
+        lockButtons(false);
+
+        plateInput.value="";
+
+        plateResult.textContent="------";
+
+        state.imageBase64="";
+
+        openCamera();
+
+    },CONFIG.AUTO_NEXT_DELAY);
+
+}
+
+/* ============================================================
+按鈕鎖定
+============================================================ */
+
+function lockButtons(disabled){
+
+    btnCamera.disabled=disabled;
+    btnRetake.disabled=disabled;
+    btnAI.disabled=disabled;
+    btnSave.disabled=disabled;
+
+}
+
+/* ============================================================
+Loading
+============================================================ */
+
+function showLoading(show){
+
+    loading.classList.toggle("show",show);
+
+}
+
+/* ============================================================
+最近10筆
+============================================================ */
+
+function addRecent(plate,type){
+
+    state.recent.unshift({
+
+        plate,
+
+        type,
+
+        time:new Date().toLocaleTimeString()
+
+    });
+
+    state.recent=state.recent.slice(0,10);
+
+    localStorage.setItem(
+
+        "recentVehicles",
+
+        JSON.stringify(state.recent)
+
+    );
+
+    renderRecent();
+
+}
+
+function restoreRecent(){
+
+    const cache=localStorage.getItem("recentVehicles");
+
+    if(cache){
+
+        state.recent=JSON.parse(cache);
+
+    }
+
+    renderRecent();
+
+}
+
+function renderRecent(){
+
+    if(state.recent.length===0){
+
+        recentList.innerHTML=
+
+        '<div class="empty">尚無資料</div>';
+
+        return;
+
+    }
+
+    recentList.innerHTML="";
+
+    state.recent.forEach(item=>{
+
+        const div=document.createElement("div");
+
+        div.className="recent-item";
+
+        div.innerHTML=
+
+        `
+        <div>
+            <strong>${item.plate}</strong>
+            <br>
+            <small>${item.type}</small>
+        </div>
+
+        <small>${item.time}</small>
+        `;
+
+        recentList.appendChild(div);
+
+    });
+
+}
+
 </script>
+
+</main>
+
+</body>
+
+</html>
+
+<!-- ============================================================
+V2.5 Enterprise PWA
+============================================================ -->
+
+<link rel="manifest" href="manifest.json">
+
+<script>
+
+if("serviceWorker" in navigator){
+
+window.addEventListener("load",()=>{
+
+navigator.serviceWorker.register("./sw.js");
+
+});
+
+}
+
+</script>
+
+<!-- ============================================================
+Toast
+============================================================ -->
+
+<div id="toast" class="toast"></div>
+
+<style>
+
+.toast{
+
+position:fixed;
+
+left:50%;
+
+bottom:28px;
+
+transform:translateX(-50%) translateY(120px);
+
+padding:14px 22px;
+
+border-radius:14px;
+
+background:rgba(17,21,28,.95);
+
+border:1px solid rgba(255,215,0,.25);
+
+color:#F5F5F5;
+
+font-weight:600;
+
+z-index:999999;
+
+transition:.3s;
+
+box-shadow:
+
+0 10px 25px rgba(0,0,0,.35);
+
+}
+
+.toast.show{
+
+transform:translateX(-50%) translateY(0);
+
+}
+
+</style>
+
+<script>
+
+/* ============================================================
+Toast
+============================================================ */
+
+function toast(msg){
+
+const t=document.getElementById("toast");
+
+t.textContent=msg;
+
+t.classList.add("show");
+
+clearTimeout(t.timer);
+
+t.timer=setTimeout(()=>{
+
+t.classList.remove("show");
+
+},2200);
+
+}
+
+/* ============================================================
+夜拍增強
+============================================================ */
+
+function enhanceNight(ctx,w,h){
+
+const img=ctx.getImageData(0,0,w,h);
+
+const d=img.data;
+
+const gamma=0.85;
+
+for(let i=0;i<d.length;i+=4){
+
+d[i]=255*Math.pow(d[i]/255,gamma);
+d[i+1]=255*Math.pow(d[i+1]/255,gamma);
+d[i+2]=255*Math.pow(d[i+2]/255,gamma);
+
+}
+
+ctx.putImageData(img,0,0);
+
+}
+
+/* ============================================================
+車牌格式驗證
+============================================================ */
+
+function validatePlate(plate){
+
+plate=plate.trim().toUpperCase();
+
+const rules=[
+
+/^[A-Z]{2,4}\-[0-9]{2,4}$/,
+
+/^[A-Z]{2,4}[0-9]{2,4}$/,
+
+/^[0-9]{2,4}\-[A-Z]{2,4}$/
+
+];
+
+return rules.some(r=>r.test(plate));
+
+}
+
+/* ============================================================
+Retry OCR
+============================================================ */
+
+async function recognizeWithRetry(maxRetry=3){
+
+let lastError;
+
+for(let i=0;i<maxRetry;i++){
+
+try{
+
+await recognizePlate();
+
+return;
+
+}catch(e){
+
+lastError=e;
+
+}
+
+}
+
+throw lastError;
+
+}
+
+/* ============================================================
+AI提示
+============================================================ */
+
+function showAIHint(msg){
+
+toast("🤖 "+msg);
+
+}
+
+/* ============================================================
+重新包裝辨識流程
+============================================================ */
+
+const oldRecognize=recognizePlate;
+
+recognizePlate=async function(){
+
+try{
+
+await oldRecognize();
+
+if(!validatePlate(plateInput.value)){
+
+showAIHint("辨識完成，建議確認車牌格式");
+
+}else{
+
+toast("辨識成功");
+
+}
+
+}catch(e){
+
+showAIHint("請靠近一點或重新拍照");
+
+throw e;
+
+}
+
+};
+
+/* ============================================================
+重新包裝送出流程
+============================================================ */
+
+const oldSave=saveVehicle;
+
+saveVehicle=async function(){
+
+if(!validatePlate(plateInput.value)){
+
+if(!confirm("車牌格式可能有誤，仍要送出？")){
+
+return;
+
+}
+
+}
+
+await oldSave();
+
+};
+
+/* ============================================================
+Enter直接送出
+============================================================ */
+
+plateInput.addEventListener("keydown",e=>{
+
+if(e.key==="Enter"){
+
+saveVehicle();
+
+}
+
+});
+
+/* ============================================================
+輸入自動大寫
+============================================================ */
+
+plateInput.addEventListener("input",()=>{
+
+plateInput.value=plateInput.value.toUpperCase();
+
+});
+
+/* ============================================================
+完成
+============================================================ */
+
+console.log(
+
+"%c 天鷹保全 V2.5 Enterprise Ready",
+
+"color:#FFD700;font-size:16px;font-weight:bold;"
+
+);
+
+toast("天鷹保全 V2.5 已啟動");
+
+</script>
+
+<!-- ============================================================
+V2.5 Enterprise 擴充功能
+============================================================ -->
+
+<script>
+
+/* ============================================================
+全域設定
+============================================================ */
+
+const APP={
+
+VERSION:"2.5 Enterprise",
+
+BUILD:"2026.06",
+
+AUTO_CAMERA:true,
+
+AUTO_RETRY:3,
+
+CACHE_TIME:10000,
+
+DEBUG:false
+
+};
+
+/* ============================================================
+OCR快取
+============================================================ */
+
+let lastOCR={
+
+plate:"",
+time:0
+
+};
+
+function getCachePlate(){
+
+const now=Date.now();
+
+if(
+
+lastOCR.plate &&
+(now-lastOCR.time)<APP.CACHE_TIME
+
+){
+
+return lastOCR.plate;
+
+}
+
+return null;
+
+}
+
+function setCachePlate(plate){
+
+lastOCR.plate=plate;
+
+lastOCR.time=Date.now();
+
+}
+
+/* ============================================================
+辨識速度計算
+============================================================ */
+
+let aiStart=0;
+
+function startTimer(){
+
+aiStart=performance.now();
+
+}
+
+function stopTimer(){
+
+const ms=Math.round(
+
+performance.now()-aiStart
+
+);
+
+toast("AI完成 "+ms+" ms");
+
+}
+
+/* ============================================================
+覆寫辨識流程
+============================================================ */
+
+const recognizePlateCore=recognizePlate;
+
+recognizePlate=async()=>{
+
+const cache=getCachePlate();
+
+if(cache){
+
+plateInput.value=cache;
+
+plateResult.textContent=cache;
+
+toast("使用最近辨識");
+
+return;
+
+}
+
+startTimer();
+
+await recognizePlateCore();
+
+stopTimer();
+
+setCachePlate(
+
+plateInput.value
+
+);
+
+};
+
+/* ============================================================
+智慧車牌修正
+============================================================ */
+
+function fixTaiwanPlate(text){
+
+text=text.toUpperCase();
+
+const arr=text.split("");
+
+for(let i=0;i<arr.length;i++){
+
+const c=arr[i];
+
+if(i<4){
+
+if(c==="0") arr[i]="O";
+if(c==="1") arr[i]="I";
+if(c==="2") arr[i]="Z";
+if(c==="5") arr[i]="S";
+if(c==="8") arr[i]="B";
+
+}else{
+
+if(c==="O") arr[i]="0";
+if(c==="I") arr[i]="1";
+if(c==="Z") arr[i]="2";
+if(c==="S") arr[i]="5";
+if(c==="B") arr[i]="8";
+
+}
+
+}
+
+return arr.join("");
+
+}
+
+/* ============================================================
+AI修正
+============================================================ */
+
+plateInput.addEventListener(
+
+"blur",
+
+()=>{
+
+plateInput.value=
+
+fixTaiwanPlate(
+
+plateInput.value
+
+);
+
+plateResult.textContent=
+
+plateInput.value;
+
+}
+
+);
+
+/* ============================================================
+手機震動
+============================================================ */
+
+function vibrate(ms=40){
+
+if(
+
+navigator.vibrate
+
+){
+
+navigator.vibrate(ms);
+
+}
+
+}
+
+/* ============================================================
+成功動畫
+============================================================ */
+
+const playSuccessCore=playSuccess;
+
+playSuccess=()=>{
+
+vibrate(60);
+
+playSuccessCore();
+
+};
+
+/* ============================================================
+Loading文字輪播
+============================================================ */
+
+const loadingText=[
+
+"AI辨識中",
+
+"正在分析圖片",
+
+"正在修正格式",
+
+"正在驗證車牌"
+
+];
+
+let loadingTimer=null;
+
+function loadingMessage(start){
+
+const p=loading.querySelector("p");
+
+if(!p) return;
+
+clearInterval(loadingTimer);
+
+if(!start){
+
+p.textContent="";
+
+return;
+
+}
+
+let index=0;
+
+loadingTimer=setInterval(()=>{
+
+p.textContent=
+
+loadingText[index];
+
+index++;
+
+if(index>=loadingText.length){
+
+index=0;
+
+}
+
+},650);
+
+}
+
+const oldLoading=showLoading;
+
+showLoading=(show)=>{
+
+oldLoading(show);
+
+loadingMessage(show);
+
+};
+
+/* ============================================================
+按鈕動畫
+============================================================ */
+
+document
+
+.querySelectorAll(".btn")
+
+.forEach(btn=>{
+
+btn.addEventListener(
+
+"touchstart",
+
+()=>{
+
+btn.style.transform="scale(.95)";
+
+}
+
+);
+
+btn.addEventListener(
+
+"touchend",
+
+()=>{
+
+btn.style.transform="";
+
+}
+
+);
+
+});
+
+/* ============================================================
+自動再次拍照
+============================================================ */
+
+const successCore=playSuccess;
+
+playSuccess=()=>{
+
+successLayer.classList.add("show");
+
+vibrate(80);
+
+setTimeout(()=>{
+
+successLayer.classList.remove("show");
+
+lockButtons(false);
+
+state.busy=false;
+
+plateInput.value="";
+
+plateResult.textContent="------";
+
+state.imageBase64="";
+
+if(APP.AUTO_CAMERA){
+
+cameraInput.value="";
+
+cameraInput.click();
+
+}
+
+},500);
+
+};
+
+/* ============================================================
+Debug
+============================================================ */
+
+if(APP.DEBUG){
+
+console.table(APP);
+
+}
+
+console.log(
+
+"TIANYING SECURITY",
+
+APP.VERSION,
+
+APP.BUILD
+
+);
+
+</script>
+
+<!-- ========================= END OF V2.5 ========================= -->
+
+<!-- ============================================================
+V2.5 Enterprise 最終補強
+============================================================ -->
+
+<script>
+
+/* ============================================================
+App Health
+============================================================ */
+
+const Health={
+
+camera:false,
+
+network:navigator.onLine,
+
+api:false,
+
+lastError:""
+
+};
+
+window.addEventListener("online",()=>{
+
+Health.network=true;
+
+toast("已恢復網路");
+
+});
+
+window.addEventListener("offline",()=>{
+
+Health.network=false;
+
+toast("目前離線");
+
+});
+
+/* ============================================================
+相機測試
+============================================================ */
+
+async function checkCamera(){
+
+try{
+
+const stream=await navigator.mediaDevices.getUserMedia({
+
+video:true
+
+});
+
+stream.getTracks().forEach(t=>t.stop());
+
+Health.camera=true;
+
+}catch(e){
+
+Health.camera=false;
+
+}
+
+}
+
+checkCamera();
+
+/* ============================================================
+按鈕防連點
+============================================================ */
+
+let clickLock=false;
+
+function lockClick(){
+
+if(clickLock) return false;
+
+clickLock=true;
+
+setTimeout(()=>{
+
+clickLock=false;
+
+},800);
+
+return true;
+
+}
+
+document.querySelectorAll(".btn").forEach(btn=>{
+
+btn.addEventListener("click",e=>{
+
+if(!lockClick()){
+
+e.preventDefault();
+
+e.stopImmediatePropagation();
+
+}
+
+});
+
+});
+
+/* ============================================================
+Operator 自動記憶
+============================================================ */
+
+operator.value=
+
+localStorage.getItem("operator")||"";
+
+operator.addEventListener("change",()=>{
+
+localStorage.setItem(
+
+"operator",
+
+operator.value
+
+);
+
+});
+
+/* ============================================================
+Vehicle Type 記憶
+============================================================ */
+
+vehicleType.value=
+
+localStorage.getItem("vehicleType")||
+
+vehicleType.value;
+
+vehicleType.addEventListener("change",()=>{
+
+localStorage.setItem(
+
+"vehicleType",
+
+vehicleType.value
+
+);
+
+});
+
+/* ============================================================
+辨識完成音效
+============================================================ */
+
+function beep(freq=880,time=120){
+
+try{
+
+const ctx=new(window.AudioContext||
+
+window.webkitAudioContext)();
+
+const osc=ctx.createOscillator();
+
+const gain=ctx.createGain();
+
+osc.frequency.value=freq;
+
+osc.connect(gain);
+
+gain.connect(ctx.destination);
+
+osc.start();
+
+gain.gain.setValueAtTime(
+
+0.05,
+
+ctx.currentTime
+
+);
+
+osc.stop(
+
+ctx.currentTime+
+
+time/1000
+
+);
+
+}catch(e){}
+
+}
+
+/* ============================================================
+成功流程覆寫
+============================================================ */
+
+const playSuccessV25=playSuccess;
+
+playSuccess=function(){
+
+beep();
+
+playSuccessV25();
+
+};
+
+/* ============================================================
+辨識完成震動
+============================================================ */
+
+const recognizeCore2=recognizePlate;
+
+recognizePlate=async()=>{
+
+await recognizeCore2();
+
+navigator.vibrate?.(35);
+
+};
+
+/* ============================================================
+複製車牌
+============================================================ */
+
+plateResult.addEventListener("click",async()=>{
+
+const text=plateInput.value;
+
+if(!text) return;
+
+try{
+
+await navigator.clipboard.writeText(text);
+
+toast("車牌已複製");
+
+}catch(e){}
+
+});
+
+/* ============================================================
+最近10筆點擊回填
+============================================================ */
+
+recentList.addEventListener("click",e=>{
+
+const item=e.target.closest(".recent-item");
+
+if(!item) return;
+
+const plate=item.querySelector("strong")?.innerText;
+
+if(!plate) return;
+
+plateInput.value=plate;
+
+plateResult.textContent=plate;
+
+});
+
+/* ============================================================
+快捷鍵
+============================================================ */
+
+document.addEventListener("keydown",e=>{
+
+if(e.key==="F2"){
+
+openCamera();
+
+}
+
+if(e.key==="F4"){
+
+recognizePlate();
+
+}
+
+if(e.key==="F8"){
+
+saveVehicle();
+
+}
+
+});
+
+/* ============================================================
+初始化
+============================================================ */
+
+(function(){
+
+console.log("===================================");
+
+console.log("天鷹保全 V2.5 Enterprise");
+
+console.log("UI : Black Gold Glass");
+
+console.log("OCR : Gemini");
+
+console.log("Night Enhance : ON");
+
+console.log("Continuous Capture : ON");
+
+console.log("===================================");
+
+toast("V2.5 Enterprise Ready");
+
+})();
+
+</script>
+
 </body>
 </html>
